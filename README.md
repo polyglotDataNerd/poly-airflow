@@ -4,4 +4,5 @@ Forked
     https://github.com/polyglotDataNerd/docker-airflow
     
 RUN: 
-    docker run -it 112e6d3de824     
+    docker run -d -p 8080:8080 airflow-development
+    docker run --rm -ti airflow-development bash   

@@ -45,6 +45,9 @@ RUN set -ex \
       libpq-dev \
       git \
     ' \
+    && apt-get update && apt-get install -y git  && git --version \
+    && git config --global url."https://${GitToken}:@github.com/".insteadOf "https://github.com/" \
+    && git clone -b master https://github.com/polyglotDataNerd/zib-airflow.git ${AIRFLOW_USER_HOME}\
     && apt-get update -yqq \
     && apt-get upgrade -yqq \
     && apt-get install -yqq --no-install-recommends \
@@ -66,7 +69,6 @@ RUN set -ex \
         && aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID} \
         && aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY} \
         && aws configure set default.region ${AWS_REGION} \
-        && aws ssm get-parameters --names /s3/polyglotDataNerd/admin/AccessKey --query Parameters[0].Value --with-decryption --output text \
     && pip install -U pip setuptools wheel \
     && pip install pytz \
     && pip install pyOpenSSL \
@@ -79,7 +81,6 @@ RUN set -ex \
     && curl -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest \
     && chmod +x /usr/local/bin/ecs-cli \
     && apt-get -y install vim \
-    && pip install --upgrade apache-airflow[log] \
     && apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
     && apt-get clean \
@@ -90,11 +91,12 @@ RUN set -ex \
       /usr/share/man \
       /usr/share/doc \
       /usr/share/doc-base
-#RUN git config --global url."https://${GitToken}:@github.com/".insteadOf "https://github.com/"
+#   &&  cp ~/zib-airflow/src/dags/test_dag.py ${AIRFLOW_USER_HOME}/dags
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x entrypoint.sh
 COPY airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
+COPY dags ${AIRFLOW_USER_HOME}/dags
 
 RUN chown -R airflow: ${AIRFLOW_USER_HOME}
 

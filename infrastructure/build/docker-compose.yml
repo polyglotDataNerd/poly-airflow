@@ -13,6 +13,7 @@ services:
         max-file: "3"
 
   webserver:
+    image: "${image}"
     build:
       context: .
       dockerfile: Dockerfile

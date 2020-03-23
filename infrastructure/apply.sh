@@ -11,7 +11,7 @@ CURRENTDATE="$(date +%Y)"
 #shell parameter for env.
 environment=$1
 #image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflowr-$environment:$EpochTag"
-image="airflow-$environment:$EpochTag"
+export image="airflow-$environment:$EpochTag"
 
 ##copy tfstate files into dir
 #aws s3 cp s3://bigdata-utility/terraform/networking/$environment/$CURRENTDATE ~/solutions/zib-network-infrastructure/infrastructure/networking  --recursive --sse --quiet --include "*"
@@ -42,6 +42,8 @@ cd ~/solutions/zib-airflow/infrastructure/build
 #eval "$(aws ecr get-login --region us-west-2 --no-include-email)"
 #docker push $image
 #docker push polyglotdatanerd/development
-docker-compose up -d
+
+# compose will only build webserver since postgres image already exists
+docker-compose up -d --build webserver
 
 cd ~/solutions/zib-airflow/
