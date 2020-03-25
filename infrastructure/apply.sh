@@ -51,9 +51,9 @@ cd ~/solutions/zib-airflow/infrastructure/build
 #docker push polyglotdatanerd/development
 
 # compose will only build webserver since postgres image already exists
-#docker-compose up -d
+docker-compose up -d
 
-docker-compose up postgres
+#docker-compose up postgres
 #docker-compose up webserver
 
 cd ~/solutions/zib-airflow/
