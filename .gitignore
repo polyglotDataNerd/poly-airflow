@@ -3,6 +3,7 @@
 *.jar
 *.iml
 .idea/
+**/data/*
 # Local .terraform directories
 **/.terraform/*
 
