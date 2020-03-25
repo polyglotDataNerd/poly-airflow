@@ -12,6 +12,13 @@ CURRENTDATE="$(date +%Y)"
 environment=$1
 #image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflowr-$environment:$EpochTag"
 export image="airflow-$environment:$EpochTag"
+export AIRFLOW__CORE__REMOTE_LOGGING=True
+export AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER=s3://bigdata-log/airflow
+# https://stackoverflow.com/questions/44780736/setting-up-s3-for-logs-in-airflow/47947127#comment100117368_47947127
+export AIRFLOW__CORE__REMOTE_LOG_CONN_ID=s3://$AWS_ACCESS:$AWS_SECRET@bigdata-log/airflow
+export AIRFLOW__CORE__ENCRYPT_S3_LOGS=True
+export AIRFLOW__CORE__EXECUTOR=LocalExecutor
+export AIRFLOW__CORE__SQL_ALCHEMY_CONN="postgresql+psycopg2://airflow:airflow@postgres:5432/airflow"
 
 ##copy tfstate files into dir
 #aws s3 cp s3://bigdata-utility/terraform/networking/$environment/$CURRENTDATE ~/solutions/zib-network-infrastructure/infrastructure/networking  --recursive --sse --quiet --include "*"
@@ -44,6 +51,9 @@ cd ~/solutions/zib-airflow/infrastructure/build
 #docker push polyglotdatanerd/development
 
 # compose will only build webserver since postgres image already exists
-docker-compose up -d --build webserver
+docker-compose up -d
+
+#docker-compose  up postgres
+#docker-compose up webserver
 
 cd ~/solutions/zib-airflow/
