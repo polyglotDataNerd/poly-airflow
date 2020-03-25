@@ -47,6 +47,8 @@ if [ "$AIRFLOW__CORE__EXECUTOR" != "SequentialExecutor" ]; then
   # Check if the user has provided explicit Airflow configuration concerning the database
   if [ -z "$AIRFLOW__CORE__SQL_ALCHEMY_CONN" ]; then
     # Default values corresponding to the default compose files
+    # docker-compose run postgres bash
+    # psql --host=postgres --username=airflow --dbname=airflow
     : "${POSTGRES_HOST:="postgres"}"
     : "${POSTGRES_PORT:="5432"}"
     : "${POSTGRES_USER:="airflow"}"
