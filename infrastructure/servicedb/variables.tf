@@ -1,4 +1,4 @@
-variable "awsaccess" {
+  variable "awsaccess" {
   type = string
 }
 variable "awssecret" {
@@ -42,7 +42,7 @@ variable "private_subnets" {
   description = "data private subnets"
   type = "map"
   default = {
-    development = "subnet-04d771fa511a01335,subnet-0dc81aefe9ffe2c9f,subnet-0f63f3dca136f73c2"
+    development = "subnet-060f8827abd9bd383,subnet-058680ba725ebb2f7,subnet-0286cc0d2662611fb"
     production = "subnet-05495ba617a541515,subnet-0a87c15bfc4e4517c,subnet-0958f31b1b8ec88fa"
   }
 }
@@ -61,7 +61,7 @@ variable "sg_security_groups" {
   description = "security groups"
   type = "map"
   default = {
-    development = "sg-0898106d658394915"
+    development = "sg-0f19043c517477b48,sg-02edcf11599c5c96b,sg-00656a2aecbd02caf"
     production = "sg-04bd133673c9e6436,sg-0b16ce13b03cf9fc6"
   }
 }
