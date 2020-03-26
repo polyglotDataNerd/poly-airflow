@@ -42,7 +42,7 @@ resource "aws_rds_cluster" "airflow_cluster" {
   availability_zones = var.availability_zone
   database_name = "airflow"
   master_username = "airflow"
-  master_password = "Airflow789*!*"
+  master_password = var.airflowpw
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.rds-param-group.name
   db_subnet_group_name = aws_db_subnet_group.rds-subnet-group.name
   vpc_security_group_ids = flatten([

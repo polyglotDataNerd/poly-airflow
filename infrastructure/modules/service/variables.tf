@@ -63,3 +63,7 @@ variable "sg_security_groups" {
   description = "sg security groups"
 }
 
+variable "airflowpw" {
+  type = "string"
+  description = "airflow database pw"
+}

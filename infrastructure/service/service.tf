@@ -17,4 +17,5 @@ module "airflow" {
   ecs_cluster = var.ecs_cluster
   image = var.image
   repository_name = var.repository_name
+  airflowpw = var.airflowpw
 }

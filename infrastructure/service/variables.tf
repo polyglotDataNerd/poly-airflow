@@ -12,6 +12,11 @@ variable "image" {
   description = "ecs repo image name"
 }
 
+variable "airflowpw" {
+  type = "string"
+  description = "airflow database pw"
+}
+
 variable "region" {
   description = "Region that the instances will be created"
   default = "us-west-2"
