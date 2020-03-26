@@ -37,7 +37,7 @@ variable "private_subnets" {
   description = "data private subnets"
   type = "map"
   default = {
-    development = "subnet-0f4ebcd81c931204d,subnet-0eb5dfcfba3a4fb68,subnet-0d3e3b264a9477ea8"
+    development = "subnet-04d771fa511a01335,subnet-0dc81aefe9ffe2c9f,subnet-0f63f3dca136f73c2"
     production = "subnet-05495ba617a541515,subnet-0a87c15bfc4e4517c,subnet-0958f31b1b8ec88fa"
   }
 }
@@ -47,7 +47,7 @@ variable "public_subnets" {
 
   type = "map"
   default = {
-    development = "subnet-0313038e00df4d119,subnet-071fa357209f1a663,subnet-0ba98e91b2811c53d"
+    development = "subnet-08e3238a8cee527b9,subnet-0874ad3ae83d93ec1,subnet-05d804a98a94486c5"
     production = "subnet-01116e90917c89682,subnet-0e366fd4cac7ca471,subnet-0c7e6328e3e3b59ce"
   }
 }
@@ -56,7 +56,7 @@ variable "sg_security_groups" {
   description = "security groups"
   type = "map"
   default = {
-    development = "sg-0f9f4f1b897dcc0b3,sg-07ae3d637de3cf36b"
+    development = "ssg-0898106d658394915"
     production = "sg-04bd133673c9e6436,sg-0b16ce13b03cf9fc6"
   }
 }

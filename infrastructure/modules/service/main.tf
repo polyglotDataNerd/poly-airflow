@@ -47,9 +47,6 @@ resource "aws_rds_cluster" "airflow_cluster" {
   db_subnet_group_name = aws_db_subnet_group.rds-subnet-group.name
   vpc_security_group_ids = flatten([
     split(",", var.sg_security_groups[var.environment])])
-  //  iam_roles = [
-  //    "arn:aws:iam::712639424220:role/RDS"]
-  //  lifecycle {ignore_changes = [iam_roles]}
   backup_retention_period = 5
   preferred_backup_window = "07:00-09:00"
   skip_final_snapshot = true
@@ -60,11 +57,11 @@ resource "aws_rds_cluster" "airflow_cluster" {
   }
 }
 
-//resource "aws_db_instance_role_association" "example" {
-//  db_instance_identifier = aws_rds_cluster_instance.db_airflow_instance.id
-//  feature_name           = "s3Import"
-//  role_arn               = "arn:aws:iam::712639424220:role/RDS"
-//}
+resource "aws_db_instance_role_association" "example" {
+  db_instance_identifier = aws_rds_cluster_instance.db_airflow_instance.id
+  feature_name           = "s3Import"
+  role_arn               = "arn:aws:iam::712639424220:role/RDS"
+}
 
 resource "aws_rds_cluster_instance" "db_airflow_instance" {
   count = "1"
