@@ -11,6 +11,7 @@ EpochTag="$(date +%s)"
 #shell parameter for env.
 environment=$1
 image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:$EpochTag"
+#image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:1585236370"
 #image="airflow-$environment:$EpochTag"
 AIRFLOW__CORE__REMOTE_LOGGING=True
 AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER=s3://bigdata-log/airflow

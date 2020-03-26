@@ -3,8 +3,8 @@ ECS task definitions, this resource is only useful when building a service. It l
 to resgister task to.
 ======*/
 
-data "aws_vpc" sg-vpc {
-  tags {
+data "aws_vpc" vpc {
+  tags = {
     Name = "vpc-${var.environment}"
   }
 }
@@ -15,7 +15,7 @@ Security group
 resource "aws_security_group" "airflow_cli_security_group" {
   name = "airflow-front-security-group-${var.environment}"
   description = "airflow alb access rules"
-  vpc_id = data.aws_vpc.sg-vpc.id
+  vpc_id = data.aws_vpc.vpc.id
 
   ingress {
     from_port = 80
@@ -31,7 +31,7 @@ resource "aws_security_group" "airflow_cli_security_group" {
     protocol = "TCP"
     self = "true"
   }
-  
+
   egress {
     from_port = 0
     to_port = 0
@@ -40,7 +40,7 @@ resource "aws_security_group" "airflow_cli_security_group" {
       "0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Environment = var.environment
     Name = "airflow-security-group-${var.environment}"
     Description = "airflow WEB UI"
@@ -54,7 +54,7 @@ https://aws.amazon.com/blogs/aws/amazon-ecs-service-discovery/
 resource "aws_service_discovery_private_dns_namespace" "airflow_prvs_dns" {
   name = "airflow-${var.environment}"
   description = "private dns namespace for airflow discovery service: ${var.environment}"
-  vpc = data.aws_vpc.sg-vpc.id
+  vpc = data.aws_vpc.vpc.id
 }
 
 /*====
@@ -130,10 +130,9 @@ resource "aws_ecs_service" "airflowservice" {
   }
 
   network_configuration {
-    security_groups = [
-      var.sg_security_groups[var.environment]]
-    subnets = [
-      var.private_subnets[var.environment]]
+    security_groups = flatten([
+      split(",", var.sg_security_groups[var.environment])])
+    subnets = flatten([
+      split(",", var.private_subnets[var.environment])])
   }
-
 }

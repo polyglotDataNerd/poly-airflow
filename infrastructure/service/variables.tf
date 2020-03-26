@@ -61,7 +61,7 @@ variable "sg_security_groups" {
   description = "security groups"
   type = "map"
   default = {
-    development = "sg-0898106d658394915"
+    development = "sg-0898106d658394915,sg-0ea22812d8646ddaa,sg-02bb678b33a467fe2"
     production = "sg-04bd133673c9e6436,sg-0b16ce13b03cf9fc6"
   }
 }
