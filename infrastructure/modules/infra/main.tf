@@ -7,7 +7,7 @@ We can use the apply command to rebuild and the destroy command to delete all th
 Cloudwatch Log Group
 ======*/
 resource "aws_cloudwatch_log_group" "airflow_log_group" {
-  name = "airflow-consumer-${var.environment}"
+  name = "airflow-${var.environment}"
   tags = {
     Environment = var.environment
     Application = "airflow"

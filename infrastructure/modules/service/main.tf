@@ -12,7 +12,7 @@ data "aws_vpc" vpc {
 /*====
 Security group
 ====*/
-resource "aws_security_group" "airflow_cli_security_group" {
+resource "aws_security_group" "airflow_security_group" {
   name = "airflow-front-security-group-${var.environment}"
   description = "airflow alb access rules"
   vpc_id = data.aws_vpc.vpc.id
@@ -97,9 +97,18 @@ resource "aws_ecs_task_definition" "airflow" {
   container_definitions = <<EOF
         [
             {
-              "name": "airflow-definition",
+              "name": "airflow-definition-${var.environment}",
               "image": "${var.image}",
               "essential": true,
+              "portMappings": [
+                {
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "protocol": "tcp"
+                }
+              ],
+              "cpu": 4024,
+              "memory": 20000,
               "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
@@ -115,7 +124,10 @@ resource "aws_ecs_task_definition" "airflow" {
 
 data "aws_ecs_task_definition" "airflowservice" {
   task_definition = aws_ecs_task_definition.airflow.family
+  depends_on = [
+    "aws_ecs_task_definition.airflow"]
 }
+
 
 resource "aws_ecs_service" "airflowservice" {
   name = "airflow-service-${var.environment}"
@@ -125,13 +137,14 @@ resource "aws_ecs_service" "airflowservice" {
   cluster = var.ecs_cluster
 
   service_registries {
-    registry_arn = "${aws_service_discovery_service.airflow_prvs_service.arn}"
+    registry_arn = aws_service_discovery_service.airflow_prvs_service.arn
     container_name = "airflow-service-${var.environment}"
   }
 
   network_configuration {
     security_groups = flatten([
-      split(",", var.sg_security_groups[var.environment])])
+      split(",", var.sg_security_groups[var.environment]),
+      aws_security_group.airflow_security_group.id])
     subnets = flatten([
       split(",", var.private_subnets[var.environment])])
   }

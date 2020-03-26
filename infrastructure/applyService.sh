@@ -11,7 +11,7 @@ EpochTag="$(date +%s)"
 #shell parameter for env.
 environment=$1
 image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:$EpochTag"
-#image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:1585236370"
+#image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:1585264984"
 #image="airflow-$environment:$EpochTag"
 AIRFLOW__CORE__REMOTE_LOGGING=True
 AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER=s3://bigdata-log/airflow
@@ -42,7 +42,7 @@ docker push $image
 #docker push "polyglotdatanerd/airflow:$EpochTag"
 
 #copy tfstate files into dir
-aws s3 cp s3://bigdata-utility/terraform/airflow/service/$environment/$CURRENTDATE ~/solutions/zib-airflow/infrastructure/service  --recursive --sse --quiet --include "*"
+aws s3 cp s3://bigdata-utility/terraform/airflow/service/$environment/$CURRENTDATE ~/solutions/zib-airflow/infrastructure/service --recursive --sse --quiet --include "*"
 
 export TF_VAR_awsaccess=$AWS_ACCESS_KEY_ID
 export TF_VAR_awssecret=$AWS_SECRET_ACCESS_KEY
@@ -57,6 +57,6 @@ terraform plan
 terraform apply -auto-approve
 
 #copy tfstate files to s3
-aws s3 cp ~/solutions/zib-airflow/infrastructure/service/ s3://bigdata-utility/terraform/airflow/service/$environment/$CURRENTDATE/  --recursive --sse --quiet --exclude "*" --include "*terraform.tfstate*"
+aws s3 cp ~/solutions/zib-airflow/infrastructure/service/ s3://bigdata-utility/terraform/airflow/service/$environment/$CURRENTDATE/ --recursive --sse --quiet --exclude "*" --include "*terraform.tfstate*"
 
 cd ~/solutions/zib-airflow/

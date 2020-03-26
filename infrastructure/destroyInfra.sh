@@ -20,6 +20,7 @@ terraform destroy -auto-approve
 #copy tfstate files to s3
 aws s3 cp ~/solutions/zib-airflow/infrastructure/serviceinfra/ s3://bigdata-utility/terraform/airflow/infra/$environment/$CURRENTDATE/  --recursive --sse --quiet --exclude "*" --include "*terraform.tfstate*"
 
+cd ~/solutions/zib-airflow/
 
 
 
