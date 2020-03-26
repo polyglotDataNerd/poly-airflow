@@ -57,11 +57,12 @@ resource "aws_rds_cluster" "airflow_cluster" {
   }
 }
 
-resource "aws_db_instance_role_association" "example" {
-  db_instance_identifier = aws_rds_cluster_instance.db_airflow_instance.id
-  feature_name           = "s3Import"
-  role_arn               = "arn:aws:iam::712639424220:role/RDS"
-}
+//resource "aws_db_instance_role_association" "example" {
+//  count = "1"
+//  db_instance_identifier = aws_rds_cluster_instance.db_airflow_instance[count.index].id
+//    feature_name = "s3Import"
+//  role_arn = "arn:aws:iam::712639424220:role/RDS"
+//}
 
 resource "aws_rds_cluster_instance" "db_airflow_instance" {
   count = "1"
