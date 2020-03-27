@@ -17,10 +17,40 @@ resource "aws_security_group" "airflow_security_group" {
   description = "airflow alb access rules"
   vpc_id = data.aws_vpc.vpc.id
 
+  # HTTP access from anywhere
   ingress {
-    from_port = 80
-    to_port = 80
+    from_port = "80"
+    to_port = "80"
     protocol = "tcp"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+
+  # HTTPS access from anywhere
+  ingress {
+    from_port = "443"
+    to_port = "443"
+    protocol = "tcp"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+
+  #HUE
+  ingress {
+    from_port = "8888"
+    to_port = "8888"
+    protocol = "TCP"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+
+  #ZEPPELIN
+  ingress {
+    from_port = "8890"
+    to_port = "8890"
+    protocol = "TCP"
+    cidr_blocks = [
+      "0.0.0.0/0"]
   }
 
   #airflow Port
@@ -28,6 +58,8 @@ resource "aws_security_group" "airflow_security_group" {
     from_port = "8080"
     to_port = "8080"
     protocol = "TCP"
+    cidr_blocks = [
+      "0.0.0.0/0"]
   }
 
   egress {
@@ -54,8 +86,7 @@ resource "aws_lb" "airrflowlb" {
   load_balancer_type = "application"
   security_groups = flatten([
     split(",", var.sg_security_groups[var.environment]),
-    aws_security_group.airflow_security_group.id,
-    "sg-0058cfc4d8e905e7b"])
+    aws_security_group.airflow_security_group.id])
   subnets = flatten([
     split(",", var.private_subnets[var.environment])])
   # enable_cross_zone_load_balancing = true -> network only
@@ -135,7 +166,8 @@ resource "aws_iam_instance_profile" "ecs-instance-profile" {
 resource "aws_launch_configuration" "launch_config" {
   name = "airflow-launch-${var.environment}"
   image_id = "ami-088dbc54f17f8a1a2"
-  instance_type = "t3.micro"
+  # $0.34 per hour -> c5.2xlarge
+  instance_type = "c5.2xlarge"
   iam_instance_profile = aws_iam_instance_profile.ecs-instance-profile.id
 
   root_block_device {
@@ -183,8 +215,8 @@ resource "aws_ecs_task_definition" "airflow" {
   requires_compatibilities = [
     "EC2"]
   network_mode = "awsvpc"
-  cpu = "1024"
-  memory = "2048"
+  cpu = "8 vCPU"
+  memory = "14 GB"
   execution_role_arn = var.ecs_IAMROLE
   task_role_arn = var.ecs_IAMROLE
   container_definitions = <<EOF
@@ -200,8 +232,6 @@ resource "aws_ecs_task_definition" "airflow" {
                     "protocol": "tcp"
                 }
               ],
-              "cpu": 1024,
-              "memory": 2048,
               "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
@@ -215,7 +245,7 @@ resource "aws_ecs_task_definition" "airflow" {
   EOF
 }
 
-data "aws_ecs_task_definition" "airflowservice" {
+data "aws_ecs_task_definition" "airflow" {
   task_definition = aws_ecs_task_definition.airflow.family
   depends_on = [
     "aws_ecs_task_definition.airflow"]
@@ -224,7 +254,7 @@ data "aws_ecs_task_definition" "airflowservice" {
 
 resource "aws_ecs_service" "airflowservice" {
   name = "airflow-${var.environment}"
-  task_definition = "${aws_ecs_task_definition.airflow.family}:${max("${aws_ecs_task_definition.airflow.revision}", "${data.aws_ecs_task_definition.airflowservice.revision}")}"
+  task_definition = "${aws_ecs_task_definition.airflow.family}:${max("${aws_ecs_task_definition.airflow.revision}", "${data.aws_ecs_task_definition.airflow.revision}")}"
   desired_count = 1
   launch_type = "EC2"
   cluster = var.ecs_cluster
