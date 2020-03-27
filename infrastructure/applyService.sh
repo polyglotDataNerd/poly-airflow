@@ -10,8 +10,8 @@ AirflowDBConn=$(aws ssm get-parameters --names /airflow/polyglotDataNerd/db/host
 EpochTag="$(date +%s)"
 #shell parameter for env.
 environment=$1
-image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:$EpochTag"
-#image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:1585264984"
+#image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:$EpochTag"
+image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:1585317101"
 #image="airflow-$environment:$EpochTag"
 AIRFLOW__CORE__REMOTE_LOGGING=True
 AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER=s3://bigdata-log/airflow
@@ -22,23 +22,23 @@ AIRFLOW__CORE__EXECUTOR=LocalExecutor
 AIRFLOW__CORE__SQL_ALCHEMY_CONN=$AirflowDBConn
 
 # DOCKER BUILD
-cd ~/solutions/zib-airflow/infrastructure/build
-docker build -f Dockerfile \
-  -t $image -t "polyglotdatanerd/airflow:$EpochTag" \
-  --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
-  --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
-  --build-arg GitToken=$GitToken \
-  --build-arg AIRFLOW__CORE__REMOTE_LOGGING=$AIRFLOW__CORE__REMOTE_LOGGING \
-  --build-arg AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER=$AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER \
-  --build-arg AIRFLOW__CORE__REMOTE_LOG_CONN_ID=$AIRFLOW__CORE__REMOTE_LOG_CONN_ID \
-  --build-arg AIRFLOW__CORE__ENCRYPT_S3_LOGS=$AIRFLOW__CORE__ENCRYPT_S3_LOGS \
-  --build-arg AIRFLOW__CORE__EXECUTOR=$AIRFLOW__CORE__EXECUTOR \
-  --build-arg AIRFLOW__CORE__SQL_ALCHEMY_CONN=$AIRFLOW__CORE__SQL_ALCHEMY_CONN \
-  --force-rm \
-  --no-cache .
-#echo $DockerToken | docker login --username polyglotdatanerd --password-stdin
-eval "$(aws ecr get-login --region us-west-2 --no-include-email)"
-docker push $image
+#cd ~/solutions/zib-airflow/infrastructure/build
+#docker build -f Dockerfile \
+#  -t $image -t "polyglotdatanerd/airflow:$EpochTag" \
+#  --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+#  --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+#  --build-arg GitToken=$GitToken \
+#  --build-arg AIRFLOW__CORE__REMOTE_LOGGING=$AIRFLOW__CORE__REMOTE_LOGGING \
+#  --build-arg AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER=$AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER \
+#  --build-arg AIRFLOW__CORE__REMOTE_LOG_CONN_ID=$AIRFLOW__CORE__REMOTE_LOG_CONN_ID \
+#  --build-arg AIRFLOW__CORE__ENCRYPT_S3_LOGS=$AIRFLOW__CORE__ENCRYPT_S3_LOGS \
+#  --build-arg AIRFLOW__CORE__EXECUTOR=$AIRFLOW__CORE__EXECUTOR \
+#  --build-arg AIRFLOW__CORE__SQL_ALCHEMY_CONN=$AIRFLOW__CORE__SQL_ALCHEMY_CONN \
+#  --force-rm \
+#  --no-cache .
+##echo $DockerToken | docker login --username polyglotdatanerd --password-stdin
+#eval "$(aws ecr get-login --region us-west-2 --no-include-email)"
+#docker push $image
 #docker push "polyglotdatanerd/airflow:$EpochTag"
 
 #copy tfstate files into dir
@@ -52,7 +52,7 @@ export TF_VAR_airflowpw=""
 cd ~/solutions/zib-airflow/infrastructure/service
 terraform init
 terraform get
-terraform validate -json
+terraform validate
 terraform plan
 terraform apply -auto-approve
 

@@ -2,7 +2,7 @@
 this of this like an init in python OR constructor in an OOP language
 */
 module "airflow" {
-  source = "../modules/service"
+  source = "../modules/serviceEc2"
   awsaccess = var.awsaccess
   awssecret = var.awssecret
   environment = var.environment

@@ -21,7 +21,6 @@ resource "aws_security_group" "airflow_security_group" {
     from_port = 80
     to_port = 80
     protocol = "tcp"
-    self = "true"
   }
 
   #airflow Port
@@ -29,7 +28,6 @@ resource "aws_security_group" "airflow_security_group" {
     from_port = "8080"
     to_port = "8080"
     protocol = "TCP"
-    self = "true"
   }
 
   egress {
