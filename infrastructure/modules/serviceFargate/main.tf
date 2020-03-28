@@ -139,16 +139,27 @@ resource "aws_alb_listener" "alb_listener_host" {
 }
 
 resource "aws_route53_zone" "r53_private_zone" {
-  name = "data.com"
+  name = "data.zibra.com"
   tags = {
     Environment = var.environment
   }
-  vpc_id = data.aws_vpc.vpc.id
 }
+
+//resource "aws_route53_record" "af" {
+//  zone_id = aws_route53_zone.r53_private_zone.id
+//  name = "airflow"
+//  type = "A"
+//
+//  alias {
+//    name = aws_lb.airrflowlb.dns_name
+//    zone_id = aws_lb.airrflowlb.zone_id
+//    evaluate_target_health = true
+//  }
+//}
 
 resource "aws_route53_record" "www" {
   zone_id = aws_route53_zone.r53_private_zone.id
-  name = "airflow"
+  name = "www"
   type = "A"
 
   alias {
@@ -168,8 +179,8 @@ resource "aws_ecs_task_definition" "airflow" {
   requires_compatibilities = [
     "FARGATE"]
   network_mode = "awsvpc"
-  cpu = "1024 vCPU"
-  memory = "2048 GB"
+  cpu = "1024"
+  memory = "2048"
   execution_role_arn = var.ecs_IAMROLE
   task_role_arn = var.ecs_IAMROLE
   container_definitions = <<EOF
