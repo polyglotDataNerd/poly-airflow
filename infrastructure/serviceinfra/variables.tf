@@ -52,7 +52,7 @@ variable "public_subnets" {
 
   type = "map"
   default = {
-    development = "subnet-08e3238a8cee527b9,subnet-0874ad3ae83d93ec1,subnet-05d804a98a94486c5"
+    development = "subnet-05d0958b6d919d26b,subnet-0d2f279e9ba9d8805,subnet-0245377e6f43eeb8d"
     production = "subnet-01116e90917c89682,subnet-0e366fd4cac7ca471,subnet-0c7e6328e3e3b59ce"
   }
 }

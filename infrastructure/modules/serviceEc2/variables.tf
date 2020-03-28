@@ -67,3 +67,8 @@ variable "airflowpw" {
   type = "string"
   description = "airflow database pw"
 }
+
+variable "bastionip" {
+  type = "string"
+  description = "airflow database pw"
+}

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #sampe call
 # source ~/zib-network-infrastructure/infrastructure/data_network_apply.sh 'production'
+# https://github.com/nicor88/aws-ecs-airflow
 
 AWS_ACCESS_KEY_ID=$(aws ssm get-parameters --names /s3/polyglotDataNerd/admin/AccessKey --query Parameters[0].Value --with-decryption --output text)
 AWS_SECRET_ACCESS_KEY=$(aws ssm get-parameters --names /s3/polyglotDataNerd/admin/SecretKey --query Parameters[0].Value --with-decryption --output text)
@@ -11,7 +12,8 @@ EpochTag="$(date +%s)"
 #shell parameter for env.
 environment=$1
 image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:$EpochTag"
-#image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:1585317101"
+BastionIP="$(curl ifconfig.me)"
+#image="712639424220.dkr.ecr.us-west-2.amazonaws.com/airflow-$environment:1585352703"
 #image="airflow-$environment:$EpochTag"
 AIRFLOW__CORE__REMOTE_LOGGING=True
 AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER=s3://bigdata-log/airflow
@@ -49,6 +51,7 @@ export TF_VAR_awssecret=$AWS_SECRET_ACCESS_KEY
 export TF_VAR_environment=$environment
 export TF_VAR_image=$image
 export TF_VAR_airflowpw=""
+export TF_VAR_bastionip=$BastionIP
 cd ~/solutions/zib-airflow/infrastructure/service
 terraform init
 terraform get

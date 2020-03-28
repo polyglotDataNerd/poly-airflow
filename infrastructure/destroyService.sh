@@ -11,6 +11,7 @@ export TF_VAR_awssecret=$AWS_SECRET_ACCESS_KEY
 export TF_VAR_environment=$environment
 export TF_VAR_image=""
 export TF_VAR_airflowpw=""
+export TF_VAR_bastionip=""
 cd ~/solutions/zib-airflow/infrastructure/service
 terraform init
 terraform get

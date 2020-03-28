@@ -23,7 +23,7 @@ resource "aws_security_group" "airflow_security_group" {
     to_port = "80"
     protocol = "tcp"
     cidr_blocks = [
-      "0.0.0.0/0"]
+      "${var.bastionip}/32"]
   }
 
   # HTTPS access from anywhere
@@ -32,25 +32,7 @@ resource "aws_security_group" "airflow_security_group" {
     to_port = "443"
     protocol = "tcp"
     cidr_blocks = [
-      "0.0.0.0/0"]
-  }
-
-  #HUE
-  ingress {
-    from_port = "8888"
-    to_port = "8888"
-    protocol = "TCP"
-    cidr_blocks = [
-      "0.0.0.0/0"]
-  }
-
-  #ZEPPELIN
-  ingress {
-    from_port = "8890"
-    to_port = "8890"
-    protocol = "TCP"
-    cidr_blocks = [
-      "0.0.0.0/0"]
+      "${var.bastionip}/32"]
   }
 
   #airflow Port
@@ -59,7 +41,7 @@ resource "aws_security_group" "airflow_security_group" {
     to_port = "8080"
     protocol = "TCP"
     cidr_blocks = [
-      "0.0.0.0/0"]
+      "${var.bastionip}/32"]
   }
 
   egress {
@@ -82,13 +64,13 @@ Load Balancer
 ====*/
 resource "aws_lb" "airrflowlb" {
   name = "alb-airflow-${var.environment}"
-  internal = true
+  internal = false
   load_balancer_type = "application"
   security_groups = flatten([
     split(",", var.sg_security_groups[var.environment]),
     aws_security_group.airflow_security_group.id])
   subnets = flatten([
-    split(",", var.private_subnets[var.environment])])
+    split(",", var.public_subnets[var.environment])])
   # enable_cross_zone_load_balancing = true -> network only
   enable_deletion_protection = false
 
@@ -98,7 +80,7 @@ resource "aws_lb" "airrflowlb" {
   }
 }
 
-resource "aws_alb_target_group" "airflow_alb_grp" {
+resource "aws_alb_target_group" "airflow_tgtgrp_host" {
   name = "airflow-grp-${var.environment}"
   target_type = "ip"
   port = 8080
@@ -112,18 +94,18 @@ resource "aws_alb_target_group" "airflow_alb_grp" {
     unhealthy_threshold = 2
     interval = 30
     timeout = 10
-    matcher = "302"
+//    matcher = "302"
   }
   depends_on = [
     "aws_lb.airrflowlb"]
 }
 
-resource "aws_alb_listener" "alb_airflow_listener" {
+resource "aws_alb_listener" "alb_listener_host" {
   load_balancer_arn = aws_lb.airrflowlb.arn
   port = 80
   protocol = "HTTP"
   default_action {
-    target_group_arn = aws_alb_target_group.airflow_alb_grp.arn
+    target_group_arn = aws_alb_target_group.airflow_tgtgrp_host.arn
     type = "forward"
   }
 }
@@ -262,17 +244,18 @@ resource "aws_ecs_service" "airflowservice" {
   load_balancer {
     container_name = "airflow-service-${var.environment}"
     container_port = "8080"
-    target_group_arn = aws_alb_target_group.airflow_alb_grp.arn
+    target_group_arn = aws_alb_target_group.airflow_tgtgrp_host.arn
   }
 
   depends_on = [
-    aws_alb_listener.alb_airflow_listener]
+    aws_alb_listener.alb_listener_host]
 
   network_configuration {
     security_groups = flatten([
       split(",", var.sg_security_groups[var.environment]),
       aws_security_group.airflow_security_group.id])
     subnets = flatten([
-      split(",", var.private_subnets[var.environment])])
+      split(",", var.public_subnets[var.environment])])
+    assign_public_ip = true
   }
 }

@@ -1,8 +1,6 @@
 /*====
-ECS task definitions, this resource is only useful when building a service. It looks for a cluster or service (container)
-to resgister task to.
+VPC
 ======*/
-
 data "aws_vpc" vpc {
   tags = {
     Name = "vpc-${var.environment}"
@@ -21,33 +19,6 @@ resource "aws_security_group" "airflow_security_group" {
   ingress {
     from_port = "80"
     to_port = "80"
-    protocol = "tcp"
-    cidr_blocks = [
-      "0.0.0.0/0"]
-  }
-
-  # HTTPS access from anywhere
-  ingress {
-    from_port = "443"
-    to_port = "443"
-    protocol = "tcp"
-    cidr_blocks = [
-      "0.0.0.0/0"]
-  }
-
-  #HUE
-  ingress {
-    from_port = "8888"
-    to_port = "8888"
-    protocol = "TCP"
-    cidr_blocks = [
-      "0.0.0.0/0"]
-  }
-
-  #ZEPPELIN
-  ingress {
-    from_port = "8890"
-    to_port = "8890"
     protocol = "TCP"
     cidr_blocks = [
       "0.0.0.0/0"]
@@ -77,42 +48,119 @@ resource "aws_security_group" "airflow_security_group" {
   }
 }
 
-/*
+/*====
+Service Discovery Private Service
 service discovery for ECS server to talk to ECS client without ALB
 https://aws.amazon.com/blogs/aws/amazon-ecs-service-discovery/
-*/
-resource "aws_service_discovery_private_dns_namespace" "airflow_prvs_dns" {
-  name = "airflow-${var.environment}"
-  description = "private dns namespace for airflow discovery service: ${var.environment}"
-  vpc = data.aws_vpc.vpc.id
-}
+====*/
+//resource "aws_service_discovery_private_dns_namespace" "airflow_prvs_dns" {
+//  name = "airflow-${var.environment}"
+//  description = "private dns namespace for airflow discovery service: ${var.environment}"
+//  vpc = data.aws_vpc.vpc.id
+//}
+//
+//
+//resource "aws_service_discovery_service" "airflow_prvs_service" {
+//  name = "airflow"
+//
+//  dns_config {
+//    /*
+//    already defined in the server, need to get Route 53 DNS to map to discoery service:
+//
+//    aws_service_discovery_private_dns_namespace.airflow_prvs_dns: CANNOT_CREATE_HOSTED_ZONE: The VPC that you chose, vpc-0f6ca4e0694881aee
+//    in region us-west-2, is already associated with another private hosted zone that has an overlapping name space, sg.airflow
+//    */
+//    namespace_id = aws_service_discovery_private_dns_namespace.airflow_prvs_dns.id
+//    dns_records {
+//      ttl = 100
+//      type = "A"
+//    }
+//
+//    routing_policy = "MULTIVALUE"
+//  }
+//
+//  health_check_custom_config {
+//    failure_threshold = 1
+//  }
+//}
+/*====
+Service Discovery Private Service
+====*/
 
 /*====
-Service Discovery
+Load Balancer Public Service
 ====*/
-resource "aws_service_discovery_service" "airflow_prvs_service" {
-  name = "airflow"
+resource "aws_lb" "airrflowlb" {
+  name = "alb-airflow-${var.environment}"
+  internal = false
+  load_balancer_type = "application"
+  security_groups = flatten([
+    split(",", var.sg_security_groups[var.environment]),
+    aws_security_group.airflow_security_group.id])
+  subnets = flatten([
+    split(",", var.public_subnets[var.environment])])
+  # enable_cross_zone_load_balancing = true -> network only
+  enable_deletion_protection = false
 
-  dns_config {
-    /*
-    already defined in the server, need to get Route 53 DNS to map to discoery service:
-
-    aws_service_discovery_private_dns_namespace.airflow_prvs_dns: CANNOT_CREATE_HOSTED_ZONE: The VPC that you chose, vpc-0f6ca4e0694881aee
-    in region us-west-2, is already associated with another private hosted zone that has an overlapping name space, sg.airflow
-    */
-    namespace_id = aws_service_discovery_private_dns_namespace.airflow_prvs_dns.id
-    dns_records {
-      ttl = 100
-      type = "A"
-    }
-
-    routing_policy = "MULTIVALUE"
-  }
-
-  health_check_custom_config {
-    failure_threshold = 1
+  tags = {
+    Name = "alb-airflow-${var.environment}"
+    Environment = var.environment
   }
 }
+
+resource "aws_alb_target_group" "airflow_tgtgrp_host" {
+  name = "airflow-grp-${var.environment}"
+  target_type = "ip"
+  port = 8080
+  protocol = "HTTP"
+  vpc_id = data.aws_vpc.vpc.id
+  health_check {
+    path = "/"
+    port = "traffic-port"
+    protocol = "HTTP"
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    interval = 30
+    timeout = 10
+    matcher = "302"
+  }
+  depends_on = [
+    "aws_lb.airrflowlb"]
+}
+
+resource "aws_alb_listener" "alb_listener_host" {
+  load_balancer_arn = aws_lb.airrflowlb.arn
+  port = 80
+  protocol = "HTTP"
+  default_action {
+    target_group_arn = aws_alb_target_group.airflow_tgtgrp_host.arn
+    type = "forward"
+  }
+}
+
+resource "aws_route53_zone" "r53_private_zone" {
+  name = "data.com"
+  tags = {
+    Environment = var.environment
+  }
+  vpc_id = data.aws_vpc.vpc.id
+}
+
+resource "aws_route53_record" "www" {
+  zone_id = aws_route53_zone.r53_private_zone.id
+  name = "airflow"
+  type = "A"
+
+  alias {
+    name = aws_lb.airrflowlb.dns_name
+    zone_id = aws_lb.airrflowlb.zone_id
+    evaluate_target_health = true
+  }
+}
+/*====
+Load Balancer
+====*/
+
 
 # Service
 resource "aws_ecs_task_definition" "airflow" {
@@ -120,8 +168,8 @@ resource "aws_ecs_task_definition" "airflow" {
   requires_compatibilities = [
     "FARGATE"]
   network_mode = "awsvpc"
-  cpu = "4 vCPU"
-  memory = "20 GB"
+  cpu = "1024 vCPU"
+  memory = "2048 GB"
   execution_role_arn = var.ecs_IAMROLE
   task_role_arn = var.ecs_IAMROLE
   container_definitions = <<EOF
@@ -137,8 +185,8 @@ resource "aws_ecs_task_definition" "airflow" {
                     "protocol": "tcp"
                 }
               ],
-              "cpu": 4024,
-              "memory": 20000,
+              "cpu": 1024,
+              "memory": 2048,
               "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
@@ -166,16 +214,26 @@ resource "aws_ecs_service" "airflowservice" {
   launch_type = "FARGATE"
   cluster = var.ecs_cluster
 
-  service_registries {
+  /*service_registries {
     registry_arn = aws_service_discovery_service.airflow_prvs_service.arn
     container_name = "airflow-service-${var.environment}"
+  }*/
+
+  load_balancer {
+    container_name = "airflow-definition-${var.environment}"
+    container_port = 8080
+    target_group_arn = aws_alb_target_group.airflow_tgtgrp_host.arn
   }
+
+  depends_on = [
+    aws_alb_listener.alb_listener_host]
 
   network_configuration {
     security_groups = flatten([
       split(",", var.sg_security_groups[var.environment]),
       aws_security_group.airflow_security_group.id])
     subnets = flatten([
-      split(",", var.private_subnets[var.environment])])
+      split(",", var.public_subnets[var.environment])])
+    assign_public_ip = true
   }
 }
