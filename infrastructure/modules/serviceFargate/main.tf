@@ -244,7 +244,7 @@ resource "aws_ecs_service" "airflowservice" {
       split(",", var.sg_security_groups[var.environment]),
       aws_security_group.airflow_security_group.id])
     subnets = flatten([
-      split(",", var.public_subnets[var.environment])])
+      split(",", var.private_subnets[var.environment])])
     assign_public_ip = true
   }
 }
