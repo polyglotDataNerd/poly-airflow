@@ -57,7 +57,7 @@ terraform init
 terraform get
 terraform validate
 terraform plan
-#terraform apply -auto-approve
+terraform apply -auto-approve
 
 #copy tfstate files to s3
 aws s3 cp ~/solutions/zib-airflow/infrastructure/service/ s3://bigdata-utility/terraform/airflow/service/$environment/$CURRENTDATE/ --recursive --sse --quiet --exclude "*" --include "*terraform.tfstate*"
