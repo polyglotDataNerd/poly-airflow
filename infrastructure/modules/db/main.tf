@@ -4,15 +4,55 @@ data "aws_vpc" vpc {
   }
 }
 
+data aws_subnet_ids "private_subnets" {
+  vpc_id = data.aws_vpc.vpc.id
+  filter {
+    name = "tag:Name"
+    values = ["us-west-2a-private-subnet-${var.environment}", "us-west-2b-private-subnet-${var.environment}", "us-west-2c-private-subnet-${var.environment}", "us-west-2d-private-subnet-${var.environment}"]
+  }
+  tags = {
+    Environment = var.environment
+    Tier = "Private"
+  }
+}
+
+data aws_subnet_ids "public_subnets" {
+  vpc_id = data.aws_vpc.vpc.id
+  filter {
+    name = "tag:Name"
+    values = ["us-west-2a-public-subnet-${var.environment}", "us-west-2b-public-subnet-${var.environment}", "us-west-2c-public-subnet-${var.environment}", "us-west-2d-public-subnet-${var.environment}"]
+  }
+  tags = {
+    Environment = var.environment
+    Tier = "Public"
+  }
+}
+
+data aws_security_group "default_sg" {
+  vpc_id = data.aws_vpc.vpc.id
+  tags = {
+    Name = "bd-security-group-${var.environment}"
+    Tier = "Default"
+  }
+}
+
+data aws_security_group "db_sg" {
+  vpc_id = data.aws_vpc.vpc.id
+  tags = {
+    Name = "bd-security-group-dbs-${var.environment}"
+    Tier = "Databases"
+  }
+}
+
 # Database
 resource "aws_db_subnet_group" "rds-subnet-group" {
   name = "rds-subnet-group-${var.environment}"
-  subnet_ids = flatten([
-    split(",", var.private_subnets[var.environment])])
+  subnet_ids = flatten([data.aws_subnet_ids.private_subnets.ids])
   tags = {
     Name = "rds-group-${var.environment}"
     Subnets = "private"
     Environment = var.environment
+    Tier = "Airflow"
   }
 }
 
@@ -41,8 +81,7 @@ resource "aws_rds_cluster" "airflow_cluster" {
   master_password = var.airflowpw
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.rds-param-group.name
   db_subnet_group_name = aws_db_subnet_group.rds-subnet-group.name
-  vpc_security_group_ids = flatten([
-    split(",", var.sg_security_groups[var.environment])])
+  vpc_security_group_ids = flatten([data.aws_security_group.db_sg.id, data.aws_security_group.default_sg.id])
   backup_retention_period = 5
   preferred_backup_window = "07:00-09:00"
   skip_final_snapshot = true
@@ -71,10 +110,11 @@ resource "aws_rds_cluster_instance" "db_airflow_instance" {
   publicly_accessible = false
 
   tags = {
-    Name = "sg-bigdata-ovenschedule-${var.environment}-${count.index}"
+    Name = "airflow-${var.environment}-${count.index}"
     VPC = data.aws_vpc.vpc.id
     ManagedBy = "terraform"
     Environment = var.environment
+    Tier = "airflow DB"
   }
 
   lifecycle {

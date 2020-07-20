@@ -8,8 +8,54 @@ data "aws_vpc" vpc {
 }
 
 /*====
+Subnets
+======*/
+
+data aws_subnet_ids "private_subnets" {
+  vpc_id = data.aws_vpc.vpc.id
+  filter {
+    name = "tag:Name"
+    values = ["us-west-2a-private-subnet-${var.environment}", "us-west-2b-private-subnet-${var.environment}", "us-west-2c-private-subnet-${var.environment}", "us-west-2d-private-subnet-${var.environment}"]
+  }
+  tags = {
+    Environment = var.environment
+    Tier = "Private"
+  }
+}
+
+data aws_subnet_ids "public_subnets" {
+  vpc_id = data.aws_vpc.vpc.id
+  filter {
+    name = "tag:Name"
+    values = ["us-west-2a-public-subnet-${var.environment}", "us-west-2b-public-subnet-${var.environment}", "us-west-2c-public-subnet-${var.environment}", "us-west-2d-public-subnet-${var.environment}"]
+  }
+  tags = {
+    Environment = var.environment
+    Tier = "Public"
+  }
+}
+
+
+/*====
 Security group
 ====*/
+
+data aws_security_group "default_sg" {
+  vpc_id = data.aws_vpc.vpc.id
+  tags = {
+    Name = "bd-security-group-${var.environment}"
+    Tier = "Default"
+  }
+}
+
+data aws_security_group "db_sg" {
+  vpc_id = data.aws_vpc.vpc.id
+  tags = {
+    Name = "bd-security-group-dbs-${var.environment}"
+    Tier = "Databases"
+  }
+}
+
 resource "aws_security_group" "airflow_security_group" {
   name = "airflow-front-security-group-${var.environment}"
   description = "airflow alb access rules"
@@ -95,10 +141,10 @@ resource "aws_lb" "airrflowlb" {
   internal = false
   load_balancer_type = "application"
   security_groups = flatten([
-    split(",", var.sg_security_groups[var.environment]),
+    data.aws_security_group.default_sg.id,
+    data.aws_security_group.db_sg.id,
     aws_security_group.airflow_security_group.id])
-  subnets = flatten([
-    split(",", var.public_subnets[var.environment])])
+  subnets = flatten(data.aws_subnet_ids.public_subnets.ids)
   # enable_cross_zone_load_balancing = true -> network only
   enable_deletion_protection = false
 
@@ -125,7 +171,7 @@ resource "aws_alb_target_group" "airflow_tgtgrp_host" {
     matcher = "302"
   }
   depends_on = [
-    "aws_lb.airrflowlb"]
+    aws_lb.airrflowlb]
 }
 
 resource "aws_alb_listener" "alb_listener_host" {
@@ -139,7 +185,7 @@ resource "aws_alb_listener" "alb_listener_host" {
 }
 
 resource "aws_route53_zone" "r53_private_zone" {
-  name = "data.zibra.com"
+  name = "data.airflow.com"
   tags = {
     Environment = var.environment
   }
@@ -241,10 +287,10 @@ resource "aws_ecs_service" "airflowservice" {
 
   network_configuration {
     security_groups = flatten([
-      split(",", var.sg_security_groups[var.environment]),
+      data.aws_security_group.default_sg.id,
+      data.aws_security_group.db_sg.id,
       aws_security_group.airflow_security_group.id])
-    subnets = flatten([
-      split(",", var.private_subnets[var.environment])])
+    subnets = flatten(data.aws_subnet_ids.private_subnets.ids)
     assign_public_ip = true
   }
 }
