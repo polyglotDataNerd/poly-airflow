@@ -185,6 +185,10 @@ resource "aws_alb_listener" "alb_listener_host" {
 }
 
 resource "aws_route53_zone" "r53_private_zone" {
+  /*
+  Need to have a registered domain for the Alias to work in route 53:
+  https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/using-domain-names-with-elb.html
+  */
   name = "data.airflow.com"
   tags = {
     Environment = var.environment
