@@ -20,7 +20,7 @@ start = DummyOperator(task_id='yelp-Loader-start',
 end = DummyOperator(task_id='yelp-Loader-end',
                     dag=baseDAG)
 
-create_command = "./bash/yelp_ecs_ETL.sh"
+create_command = "./usr/local/airflow/bash/yelp_ecs_ETL.sh"
 if os.path.exists(create_command):
     command = BashOperator(
         task_id='yelp',
