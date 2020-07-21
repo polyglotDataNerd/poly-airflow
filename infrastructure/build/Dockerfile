@@ -108,8 +108,9 @@ RUN set -ex \
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x entrypoint.sh
-COPY airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
-COPY dags ${AIRFLOW_USER_HOME}/dags
+#COPY airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
+#COPY dags ${AIRFLOW_USER_HOME}/dags
+COPY . ${AIRFLOW_USER_HOME}
 RUN chown -R airflow: ${AIRFLOW_USER_HOME}
 
 EXPOSE 8080 5555 8793
