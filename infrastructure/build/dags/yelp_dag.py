@@ -20,14 +20,14 @@ start = DummyOperator(task_id='yelp-Loader-start',
 end = DummyOperator(task_id='yelp-Loader-end',
                     dag=baseDAG)
 
-create_command = "./usr/local/airflow/bash/yelp_ecs_ETL.sh"
-if os.path.exists(create_command):
+path = "/usr/local/airflow/bash/yelp_ecs_ETL.sh"
+if os.path.exists(path):
     command = BashOperator(
         task_id='yelp',
-        bash_command=create_command,
+        bash_command="source {}".format(path),
         dag=baseDAG,
     )
 else:
-    raise Exception("Cannot loacate{}".format(create_command))
+    raise Exception("Cannot loacate{}".format(path))
 
 start >> command >> end
