@@ -24,7 +24,7 @@ create_command = "./usr/local/airflow/bash/yelp_ecs_ETL.sh"
 if os.path.exists(create_command):
     command = BashOperator(
         task_id='yelp',
-        bash_command='echo HELLO WORLD',
+        bash_command=create_command,
         dag=baseDAG,
     )
 else:
