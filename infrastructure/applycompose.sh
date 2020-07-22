@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #sampe call
-# source ~/zib-network-infrastructure/infrastructure/data_network_apply.sh 'production'
+# source ~/poly-network-infrastructure/infrastructure/data_network_apply.sh 'production'
 
 export AWS_ACCESS=$(aws ssm get-parameters --names /s3/polyglotDataNerd/admin/AccessKey --query Parameters[0].Value --with-decryption --output text)
 export AWS_SECRET=$(aws ssm get-parameters --names /s3/polyglotDataNerd/admin/SecretKey --query Parameters[0].Value --with-decryption --output text)
@@ -20,10 +20,10 @@ export AIRFLOW__CORE__ENCRYPT_S3_LOGS=True
 export AIRFLOW__CORE__SQL_ALCHEMY_CONN="postgresql+psycopg2://airflow:airflow@postgres:5432/airflow"
 
 # DOCKER BUILD
-cd ~/solutions/zib-airflow/infrastructure/build
+cd ~/solutions/poly-airflow/infrastructure/build
 # compose will only build webserver since postgres image already exists
 docker-compose up -d
 #docker-compose up postgres
 #docker-compose up webserver
 
-cd ~/solutions/zib-airflow/
+cd ~/solutions/poly-airflow/

@@ -61,7 +61,7 @@ RUN set -ex \
     ' \
     && apt-get update && apt-get install -y git  && git --version \
     && git config --global url."https://${GitToken}:@github.com/".insteadOf "https://github.com/" \
-    && git clone -b master https://github.com/polyglotDataNerd/zib-airflow.git ${AIRFLOW_USER_HOME}/zib-airflow \
+    && git clone -b master https://github.com/polyglotDataNerd/poly-airflow.git ${AIRFLOW_USER_HOME}/poly-airflow \
     && apt-get update -yqq \
     && apt-get upgrade -yqq \
     && apt-get install -yqq --no-install-recommends \
@@ -104,7 +104,7 @@ RUN set -ex \
       /usr/share/man \
       /usr/share/doc \
       /usr/share/doc-base
-#   &&  cp ~/zib-airflow/src/dags/test_dag.py ${AIRFLOW_USER_HOME}/dags
+#   &&  cp ~/poly-airflow/src/dags/test_dag.py ${AIRFLOW_USER_HOME}/dags
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x entrypoint.sh

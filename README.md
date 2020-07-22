@@ -1,4 +1,4 @@
-# zib-airflow
+# poly-airflow
 
 **Airflow on ECS Fargate/EC2**
 
