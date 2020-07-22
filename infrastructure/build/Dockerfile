@@ -18,7 +18,7 @@ ARG AWS_REGION=us-west-2
 ARG GitToken
 
 # Airflow
-ARG AIRFLOW_VERSION=1.10.10
+ARG AIRFLOW_VERSION=1.10.9
 ARG AIRFLOW_USER_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
 ARG PYTHON_DEPS=""
@@ -108,8 +108,6 @@ RUN set -ex \
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x entrypoint.sh
-#COPY airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
-#COPY dags ${AIRFLOW_USER_HOME}/dags
 COPY . ${AIRFLOW_USER_HOME}
 RUN chown -R airflow: ${AIRFLOW_USER_HOME}
 

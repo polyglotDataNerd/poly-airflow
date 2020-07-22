@@ -9,8 +9,8 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.bash_operator import BashOperator
 
 # base DAG
-baseDAG = DAG('-DAG',
-              description='runs when DAG is deployed',
+baseDAG = DAG('yelp-DAG',
+              description='runs yelp DAG',
               schedule_interval='30 07 * * *',
               start_date=datetime(2020, 3, 23),
               catchup=False)
@@ -24,7 +24,7 @@ path = "/usr/local/airflow/bash/yelp_ecs_ETL.sh"
 if os.path.exists(path):
     command = BashOperator(
         task_id='yelp',
-        bash_command="source {}".format(path),
+        bash_command="sh {} ".format(path),
         dag=baseDAG,
     )
 else:
