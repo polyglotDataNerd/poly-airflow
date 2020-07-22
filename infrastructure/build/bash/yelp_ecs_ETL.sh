@@ -6,13 +6,16 @@
 #| limit 25
 #| filter @message like /ERROR/
 
-#a1yelp='{"containerOverrides": [{"name": "yelp-definition-development"}]} ';
-#aws ecs run-task --cluster services-cluster --task-definition poly-yelp-development:12 --overrides "$a1yelp" --count 1 --launch-type "FARGATE" --network-configuration "awsvpcConfiguration={subnets=[subnet-0b7581c00199ba7bf],securityGroups=[sg-00adf36beb42c868d, sg-0ace7e7de75ff79ef], assignPublicIp=DISABLED}"
+#query filter example
+#aws ec2 describe-subnets \
+#--filters Name=tag:Tier,Values=Private \
+#--query 'Subnets[?Tags[?Key==`Name`&&Value!=`us-west-2-lax-1a-private-subnet-development`]].AvailabilityZone' \
+#--output text
 
 private=$(aws ec2 describe-subnets \
-    --filters Name=tag:Tier,Values=Private \
-    --query 'Subnets[?Tags!=`'us-west-2-lax-1a-private-subnet-development'`].SubnetId' \
-    --output text)
+--filters Name=tag:Tier,Values=Private \
+--query 'Subnets[?Tags[?Key==`Name`&&Value!=`us-west-2-lax-1a-private-subnet-development`]].SubnetId' \
+--output text)
 
 subnets=`echo $private | sed 's/ /,/g'`
 
