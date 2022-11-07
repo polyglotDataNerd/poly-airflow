@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-scheduler
+  namespace: poly-airflow
+  labels:
+    app: airflow
+    chart: {{ template "airflow.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: airflow-scheduler
+      release: {{ .Release.Name }}
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: airflow-scheduler
+        release: {{ .Release.Name }}
+    spec:
+{{/*      restartPolicy: Never*/}}
+      affinity:
+        {{ .Values.affinity | toJson }}
+      tolerations:
+        {{ .Values.tolerations | toJson }}
+      serviceAccountName: {{.Release.Name }}-cluster-access
+      containers:
+        - name: scheduler
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - airflow scheduler
+{{/*          livenessProbe:*/}}
+{{/*            exec:*/}}
+{{/*              command:*/}}
+{{/*                - "/bin/sh"*/}}
+{{/*                - "-c"*/}}
+{{/*                - "airflow jobs check --job-type SchedulerJob --hostname \"$(hostname)\""*/}}
+{{/*            failureThreshold: 5*/}}
+{{/*            initialDelaySeconds: 30*/}}
+{{/*            periodSeconds: 60*/}}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-env-vars
+          resources:
+            limits:
+              memory: 1000Mi
+              cpu: 500m
+            requests:
+              memory: 500Mi
+              cpu: 500m
+          volumeMounts:
+            - name: config
+              mountPath: {{ .Values.airflow_home }}/airflow.cfg
+              subPath: airflow.cfg
+            - name: logs
+              mountPath: {{ .Values.airflow_home }}/logs
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-config
+        - name: logs
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-logs
+

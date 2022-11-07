@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dummy-name
+  namespace: airflow
+spec:
+  restartPolicy: Never
+  containers:
+    - name: base
+      image: dummy_image
+      imagePullPolicy: IfNotPresent
+      ports: [ ]
+      command: [ ]
+      volumeMounts:
+        - name: config
+          mountPath: /usr/local/airflow/airflow.cfg
+          subPath: airflow.cfg
+        - name: logs
+          mountPath: /usr/local/airflow/logs
+  serviceAccountName: airflow-cluster-access
+  volumes:
+    - name: config
+      configMap:
+        name: airflow-config
+    - name: logs
+      persistentVolumeClaim:
+        claimName: airflow-logs

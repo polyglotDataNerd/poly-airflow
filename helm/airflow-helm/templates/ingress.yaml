@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: airflow-ingress
+  namespace: poly-airflow
+  labels:
+    app.kubernetes.io/name: airflow
+    app: airflow
+  annotations:
+    kubernetes.io/ingress.class: "alb"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/success-codes: 200-399
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:712639424220:certificate/d53c0fb0-cf14-4c20-8bff-2b4560387711
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+spec:
+  rules:
+    - host: airflow.poly-de-prod.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: {{ .Release.Name }}-service
+                port:
+                  number: 80
+

@@ -1,0 +1,18 @@
+apache-airflow[google,amazon,apache.spark,package-extra,crypto]==2.3.2
+apache-airflow-providers-ssh
+boto3
+# boto
+botocore
+mysqlclient
+kubernetes
+awscli
+apache-airflow-providers-slack[http]
+apache-airflow-providers-slack
+# paramiko
+aiohttp
+apache-airflow-providers-postgres
+apache-airflow-providers-amazon
+apache-airflow-providers-presto
+
+
+

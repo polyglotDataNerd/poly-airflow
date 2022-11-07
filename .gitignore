@@ -1,17 +1,4 @@
-*.DS_Store
-*.properties
-*.jar
-*.iml
 .idea/
-**/data/*
-# Local .terraform directories
-**/.terraform/*
-
-# .tfstate files
-*.tfstate
-*.tfstate.*
-*target/*
-
-# python
-*.pyc
-**__pycache__**
+*.DS_Store
+*.iml
+.vscode/*

@@ -1,0 +1,154 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: poly-airflow
+  name: {{.Release.Name}}-config
+  labels:
+    app: airflow
+    chart: {{template "airflow.chart" .}}
+    release: {{.Release.Name}}
+    heritage: {{.Release.Service}}
+data:
+  {{- /*
+  This configuration is adapted for the hosted airflow node instances that are
+  assigned to the the data team
+
+  Instance      vCPU	              Memory (GiB)
+  m5.4xlarge	16 (Threads)	        64
+
+  lscpu
+  max_thread_count (Socket(s) * Core(s) per socket * Thread(s) per core) = 16
+
+  Architecture:        x86_64
+  CPU op-mode(s):      32-bit, 64-bit
+  Byte Order:          Little Endian
+  CPU(s):              16
+  On-line CPU(s) list: 0-15
+  Thread(s) per core:  2
+  Core(s) per socket:  8
+  Socket(s):           1
+  NUMA node(s):        1
+  Vendor ID:           GenuineIntel
+  CPU family:          6
+  Model:               85
+  Model name:          Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+  Stepping:            7
+  CPU MHz:             3211.360
+  BogoMIPS:            4999.99
+  Hypervisor vendor:   KVM
+  Virtualization type: full
+  L1d cache:           32K
+  L1i cache:           32K
+  L2 cache:            1024K
+  L3 cache:            36608K
+  NUMA node0 CPU(s):   0-15
+
+ */}}
+  airflow.cfg: |
+    [core]
+    executor = KubernetesExecutor
+    sql_alchemy_conn = {{printf "%s://%s:%s@%s:%s/%s" .Values.db_conn_type .Values.db_user .Values.db_password .Values.db_host .Values.db_port .Values.db_name}}
+    fernet_key = {{.Values.fernet_key}}
+    load_examples = False
+    max_active_tasks_per_dag = 10
+    parallelism = 32 {{- /* max of 16 threads */}}
+    remote_log_conn_id = s3
+    encrypt_s3_logs = True {{- /* Best practice to ALWAYS encrypt objects in Object Store */}}
+
+    [webserver]
+    base_url = http://localhost:8080
+    hide_paused_dags_by_default = True
+    page_size = 1000
+    # The ip specified when starting the web server
+    web_server_host = 0.0.0.0
+
+    # The port on which to run the web server
+    web_server_port = 8080
+
+    rbac = True
+    authenticate = True
+    auth_backend = airflow.contrib.auth.backends.google_auth
+
+    [email]
+    html_content_template = {{.Values.airflow_home}}/tools/email/html_content_template.html
+
+    [smtp]
+    smtp_host = {{.Values.smtp_host}}
+    smtp_port = {{ .Values.smtp_port }}
+    smtp_starttls = {{.Values.smtp_starttls}}
+    smtp_ssl = {{.Values.smtp_ssl}}
+
+    smtp_user = {{.Values.smtp_user}}
+    smtp_password =
+    smtp_mail_from = {{.Values.smtp_mail_from}}
+
+    [scheduler]
+    scheduler_heartbeat_sec = {{.Values.scheduler_heartbeat_sec}}
+    scheduler_health_check_threshold = 25
+
+    [parsing_processes]
+    max_threads = {{.Values.scheduler_max_threads}} {{- /* This should be set to n-1 where n is the number of CPUs of your scheduler */}}
+
+    [metrics]
+    statsd_on = {{.Values.statsd_on}}
+    statsd_host = {{.Values.statsd_host}}
+    statsd_port = {{.Values.statsd_port}}
+    statsd_prefix = {{.Release.Name}}
+
+    [logging]
+    colored_console_log = False
+    remote_logging = True
+    remote_base_log_folder = {{.Values.logs_s3_prefix}}
+
+    [kubernetes]
+    pod_template_file = {{ .Values.airflow_home }}/pod_template_file.yaml
+    worker_container_repository = {{ .Values.image.repository }}
+    worker_container_tag = {{ .Values.image.tag }}
+    dags_in_image = true
+    namespace = {{ .Release.Namespace }}
+    airflow_configmap = {{ .Release.Name }}-config
+
+    logs_volume_claim = {{.Release.Name}}-logs
+    logs_volume_subpath = {{.Release.Name}}-logs
+
+    affinity = {{.Values.affinity | toJson}}
+    tolerations = {{.Values.tolerations | toJson}}
+
+    delete_worker_pods = {{.Values.delete_worker_pods}}
+    delete_worker_pods_on_failure = False
+
+    [kubernetes_annotations]
+    iam.amazonaws.com/role = {{.Values.iam_aws_role}}
+
+{{/*    [secrets]*/}}
+{{/*    backend = airflow.providers.amazon.aws.secrets.systems_manager.SystemsManagerParameterStoreBackend*/}}
+{{/*    backend_kwargs = {"connections_prefix": "/airflow/connections", "variables_prefix": "/airflow/variables", "profile_name": "default"}*/}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{.Release.Name}}-cred-files
+  labels:
+    app: airflow
+    chart: {{template "airflow.chart" .}}
+    release: {{.Release.Name}}
+    heritage: {{.Release.Service}}
+data:
+  {{- toYaml .Values.cred_files | nindent 2}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{.Release.Name}}-env-vars
+  labels:
+    app: airflow
+    chart: {{template "airflow.chart" .}}
+    release: {{.Release.Name}}
+    heritage: {{.Release.Service}}
+data:
+  {{if .Values.kubernetes_environment_variables}}
+  {{- toYaml .Values.kubernetes_environment_variables | nindent 2}}
+  {{end}}
+  {{if .Values.kubernetes_environment_variables_secrets}}
+  {{- toYaml .Values.kubernetes_environment_variables_secrets | nindent 2}}
+  {{end}}

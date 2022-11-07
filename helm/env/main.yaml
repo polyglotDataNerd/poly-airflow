@@ -1,0 +1,13 @@
+db_conn_type: mysql+mysqldb
+db_user: airflow_user
+db_host: poly-de-external.cluster-cxazzlits9dw.us-west-2.rds.amazonaws.com
+db_port: "3306"
+db_name: airflow_db
+logs_s3_prefix: s3://poly-de/airflow/logs_helm_stage/
+hostname: poly-de-prod.com/airflow
+kubernetes_environment_variables:
+  ENV_VAR1: asdasd
+  ENV_VAR2: "1233"
+iam_aws_role: arn:aws:iam::712639424220:role/data_role_eks
+service_account: system:serviceaccount:airflow:default
+

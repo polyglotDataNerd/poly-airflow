@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-web
+  namespace: poly-airflow
+  labels:
+    app: airflow
+    chart: {{ template "airflow.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: airflow-web
+      release: {{ .Release.Name }}
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: airflow-web
+        release: {{ .Release.Name }}
+    spec:
+{{/*      restartPolicy: Never*/}}
+      affinity:
+        {{ .Values.affinity | toJson }}
+      tolerations:
+        {{ .Values.tolerations | toJson }}
+      containers:
+        - name: webserver
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          ports:
+            - name: webserver
+              containerPort: 8080
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - airflow db init && airflow db upgrade && airflow webserver
+          resources:
+            limits:
+              memory: 2000Mi
+              cpu: 1500m
+            requests:
+              memory: 1500Mi
+              cpu: 1000m
+          volumeMounts:
+            - name: config
+              mountPath: {{ .Values.airflow_home }}/airflow.cfg
+              subPath: airflow.cfg
+            - name: logs
+              mountPath: {{ .Values.airflow_home }}/logs
+      serviceAccountName: {{.Release.Name }}-cluster-access
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-config
+        - name: logs
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-logs

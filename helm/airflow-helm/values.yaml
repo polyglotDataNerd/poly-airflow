@@ -1,0 +1,28 @@
+airflow_home: /usr/local/airflow
+
+smtp_host: smtp.sendgrid.net
+smtp_port: "587"
+smtp_starttls: True
+smtp_ssl: False
+smtp_user: data-monitoring
+smtp_mail_from: gerard@poly.tools
+
+scheduler_heartbeat_sec: 2
+scheduler_max_threads: 3
+
+statsd_on: False
+
+affinity:
+tolerations:
+iam_aws_role:
+
+delete_worker_pods: True
+
+logs_requests_storage: 2Gi
+logs_storage_class: gp2
+
+ssh_private_keys: {}
+cred_files: {}
+
+kubernetes_environment_variables: {}
+kubernetes_environment_variables_secrets: {}
