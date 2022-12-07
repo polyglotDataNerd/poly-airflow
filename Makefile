@@ -1,7 +1,10 @@
 airflow:
-	docker-compose --file compose/docker-compose.yml build airflow
-	docker-compose --file compose/docker-compose.yml run --rm --service-ports airflow \
-	    bash -c "airflow initdb && airflow scheduler & airflow webserver"
+	docker-compose --file compose/docker-compose.yml up --build webserver
+#	docker-compose --file compose/docker-compose.yml up --build
+#	docker-compose --file compose/docker-compose.yml up webserver
+#	docker-compose --file compose/docker-compose.yml run --rm --service-ports airflow \
+#	    bash -c "airflow db init && airflow scheduler & airflow webserver"
+#	docker-compose --file compose/docker-compose.yml up
 
 
 # Login to AWS registry (must have docker running)
@@ -18,3 +21,11 @@ docker-push:
 
 # Build docker image and push to AWS registry
 docker-build-and-push: docker-login docker-build docker-push
+
+down:
+	#kafka-topics.sh --bootstrap-server localhost:2181 --topic test --delete
+	docker-compose --file compose/docker-compose.yml down --remove-orphans
+
+stop:
+	#kafka-topics.sh --bootstrap-server localhost:2181 --topic test --delete
+	docker-compose --file compose/docker-compose.yml stop

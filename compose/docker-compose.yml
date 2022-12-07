@@ -3,9 +3,13 @@ version: '2.1'
 services:
 
   postgres:
-    image: postgres:9.6
+    image: postgres:13
     ports:
-      - "5432:5432"
+      - "5434:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "airflow" ]
+      interval: 5s
+      retries: 5
     environment:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
@@ -15,65 +19,35 @@ services:
     build:
       context: ../
       args:
-        - PIP_EXTRA_INDEX_URL=$PIP_EXTRA_INDEX_URL
-        - NEXUS_HOST=$NEXUS_HOST
+        SQL_ALCHEMY_CONN: postgresql://airflow:airflow@postgres/airflow
 
   webserver:
     extends:
       service: base
     ports:
-      - "8083:8080"
+      - "8080:8080"
     depends_on:
       - postgres
-    env_file: ../.devcontainer/dev.env
-    environment:
-      - AIRFLOW_ENV=dev
+    env_file: ./dev.env
+    #    environment:
+    #      AIRFLOW_ENV: dev
+    #      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    #      # For backward compatibility, with Airflow <2.3
+    #      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     volumes:
-      - "./entrypoint.sh:/usr/local/airflow/entrypoint.sh"
       - "./airflow.cfg:/usr/local/airflow/airflow.cfg"
       - "../src/dags:/usr/local/airflow/dags"
       - "../src/jobs:/usr/local/airflow/jobs"
       - "../src/tools:/usr/local/airflow/tools"
       - "../src/sqls:/usr/local/airflow/sqls"
       - "../src/jobs:/usr/local/airflow/bash"
-      - "../dbt:/usr/local/dbt"
-    entrypoint: "./entrypoint.sh"
-
-  dev:
-    extends:
-      service: base
-    command: "bash"
-    depends_on:
-      - postgres
-    volumes:
-      - "../src/dags:/usr/local/airflow/dags"
-      - "../src/jobs:/usr/local/airflow/jobs"
-      - "../src/tools:/usr/local/airflow/tools"
-      - "../src/sqls:/usr/local/airflow/sqls"
-      - "../src/jobs:/usr/local/airflow/bash"
-      - "../tests:/usr/local/airflow/tests"
-      - "../dbt:/usr/local/dbt"
-    env_file: ../.devcontainer/dev.env
-
-  vs-dev:
-    extends:
-      service: base
-    command: "sleep infinity"
-    depends_on:
-      - postgres
-    volumes:
-      - "../src/dags:/usr/local/airflow/dags"
-      - "../src/jobs:/usr/local/airflow/jobs"
-      - "../src/tools:/usr/local/airflow/tools"
-      - "../src/sqls:/usr/local/airflow/sqls"
-      - "../src/jobs:/usr/local/airflow/bash"
-      - "../tests:/usr/local/airflow/tests"
-      - "../dbt:/usr/local/dbt"
-    env_file: ../.devcontainer/dev.env
+#    entrypoint: "./entrypoint.sh"
 
 
-  test:
-    extends:
-      service: base
-    command: "py.test"
 
+#networks:
+#  postgres:
+#
+#volumes:
+#  postgres:
+#    driver: local
