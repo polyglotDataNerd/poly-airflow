@@ -15,7 +15,7 @@ dag = DAG(
         "owner": "airflow",
         "on_failure_callback": slack_failed_task,
     },
-    schedule_interval="*/5 * * * *",
+    schedule_interval=None,
     start_date=datetime(2022, 1, 1),
     dagrun_timeout=timedelta(minutes=5),
     is_paused_upon_creation=False,

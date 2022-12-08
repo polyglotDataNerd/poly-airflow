@@ -1,11 +1,5 @@
 airflow:
-	docker-compose --file compose/docker-compose.yml up --build webserver
-#	docker-compose --file compose/docker-compose.yml up --build
-#	docker-compose --file compose/docker-compose.yml up webserver
-#	docker-compose --file compose/docker-compose.yml run --rm --service-ports airflow \
-#	    bash -c "airflow db init && airflow scheduler & airflow webserver"
-#	docker-compose --file compose/docker-compose.yml up
-
+	docker-compose --file compose/docker-compose.yml up
 
 # Login to AWS registry (must have docker running)
 docker-login:

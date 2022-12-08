@@ -1,4 +1,4 @@
-FROM python:3.8-slim-bullseye
+FROM python:3.8-slim-bullseye AS builder
 
 ARG SQL_ALCHEMY_CONN
 ENV AIRFLOW__CORE__SQL_ALCHEMY_CONN=$SQL_ALCHEMY_CONN

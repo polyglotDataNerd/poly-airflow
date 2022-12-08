@@ -1,53 +1,49 @@
-version: '2.1'
+version: '2.4'
 
 services:
-
-  postgres:
+  db:
+    container_name: db
     image: postgres:13
     ports:
-      - "5434:5432"
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "airflow" ]
       interval: 5s
       retries: 5
-    environment:
-      - POSTGRES_USER=airflow
-      - POSTGRES_PASSWORD=airflow
-      - POSTGRES_DB=airflow
+    restart: always
 
-  base:
+  airflow:
+    container_name: build
     build:
       context: ../
       args:
-        SQL_ALCHEMY_CONN: postgresql://airflow:airflow@postgres/airflow
+        SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@db/airflow
 
   webserver:
+    container_name: web
     extends:
-      service: base
+      service: airflow
     ports:
       - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://localhost:8080/health" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
     depends_on:
-      - postgres
-    env_file: ./dev.env
-    #    environment:
-    #      AIRFLOW_ENV: dev
-    #      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    #      # For backward compatibility, with Airflow <2.3
-    #      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - db
+    env_file: "./dev.env"
     volumes:
-      - "./airflow.cfg:/usr/local/airflow/airflow.cfg"
       - "../src/dags:/usr/local/airflow/dags"
       - "../src/jobs:/usr/local/airflow/jobs"
       - "../src/tools:/usr/local/airflow/tools"
       - "../src/sqls:/usr/local/airflow/sqls"
       - "../src/jobs:/usr/local/airflow/bash"
-#    entrypoint: "./entrypoint.sh"
-
-
-
-#networks:
-#  postgres:
-#
-#volumes:
-#  postgres:
-#    driver: local
+      - "./airflow.cfg:/usr/local/airflow/airflow.cfg"
+      - "./entrypoint.sh:/usr/local/airflow/entrypoint.sh"
+    entrypoint: "/usr/local/airflow/entrypoint.sh"
