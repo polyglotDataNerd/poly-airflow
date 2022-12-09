@@ -1,8 +1,8 @@
 version: '2.4'
 
 services:
-  db:
-    container_name: db
+  postgres:
+    container_name: postgres
     image: postgres:13
     ports:
       - "5432:5432"
@@ -15,13 +15,18 @@ services:
       interval: 5s
       retries: 5
     restart: always
+    networks:
+      - local
 
   airflow:
     container_name: build
     build:
       context: ../
+      dockerfile: DockerfileLocal
       args:
-        SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@db/airflow
+        - SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+        - CORE__FERNET_KEY=bgcmnw69Rw6qqP42imvHumCa_FxizhErQr5Gf6HPErQ=
+        - CORE__DAGS_FOLDER=/usr/local/airflow/dags
 
   webserver:
     container_name: web
@@ -36,14 +41,20 @@ services:
       retries: 5
     restart: always
     depends_on:
-      - db
-    env_file: "./dev.env"
+      - postgres
+    links:
+      - postgres:postgres
     volumes:
       - "../src/dags:/usr/local/airflow/dags"
       - "../src/jobs:/usr/local/airflow/jobs"
       - "../src/tools:/usr/local/airflow/tools"
       - "../src/sqls:/usr/local/airflow/sqls"
       - "../src/jobs:/usr/local/airflow/bash"
-      - "./airflow.cfg:/usr/local/airflow/airflow.cfg"
       - "./entrypoint.sh:/usr/local/airflow/entrypoint.sh"
     entrypoint: "/usr/local/airflow/entrypoint.sh"
+    networks:
+      - local
+
+networks:
+  local:
+    driver: bridge

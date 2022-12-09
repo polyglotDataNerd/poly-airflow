@@ -15,5 +15,7 @@
 #  sleep 2
 #done
 airflow db init &&
-Sleep 30
+sleep 30
 airflow webserver & airflow scheduler
+sleep 60
+airflow users create -u airflow -p airflow -r Admin -f airflow -l airflow -e airflow@airflow.com

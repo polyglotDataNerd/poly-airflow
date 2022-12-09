@@ -44,7 +44,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: Dockerfile
+          file: DockerfileLocal
           push: true
           tags: ${{ steps.login-ecr.outputs.registry }}/poly/airflow:${{ github.sha }}
           build-args: SQL_ALCHEMY_CONN=${{secrets.PROD_SQL_ALCHEMY_CONN}}
