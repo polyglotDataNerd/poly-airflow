@@ -1,5 +1,6 @@
 airflow:
-	docker-compose --file compose/docker-compose.yml up
+	docker-compose --file compose/docker-compose.yml up -d db
+	docker-compose --file compose/docker-compose.yml up webs
 
 # Login to AWS registry (must have docker running)
 docker-login:
@@ -18,7 +19,7 @@ docker-build-and-push: docker-login docker-build docker-push
 
 down:
 	#kafka-topics.sh --bootstrap-server localhost:2181 --topic test --delete
-	docker-compose --file compose/docker-compose.yml down --remove-orphans
+	docker-compose --file compose/docker-compose.yml down -v --remove-orphans
 
 stop:
 	#kafka-topics.sh --bootstrap-server localhost:2181 --topic test --delete
