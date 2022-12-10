@@ -1,11 +1,15 @@
 version: '2.4'
 
 services:
-  postgres:
+  db:
     container_name: postgres
-    image: postgres:13
+    image: postgres:9.6
     ports:
       - "5432:5432"
+    expose:
+      - "5432"
+#    volumes:
+#      - postgres-db-volume:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
@@ -18,32 +22,38 @@ services:
     networks:
       - local
 
-  airflow:
+  af:
     container_name: build
     build:
       context: ../
       dockerfile: DockerfileLocal
       args:
-        - SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+        - SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@db/airflow
         - CORE__FERNET_KEY=bgcmnw69Rw6qqP42imvHumCa_FxizhErQr5Gf6HPErQ=
         - CORE__DAGS_FOLDER=/usr/local/airflow/dags
+        - API__AUTH_BACKENDS=airflow.api.auth.backend.basic_auth
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - local
 
-  webserver:
+  webs:
     container_name: web
     extends:
-      service: airflow
+      service: af
     ports:
       - "8080:8080"
     healthcheck:
       test: [ "CMD", "curl", "--fail", "http://localhost:8080/health" ]
-      interval: 10s
-      timeout: 10s
+      interval: 30s
+      timeout: 60s
       retries: 5
     restart: always
     depends_on:
-      - postgres
+      - db
     links:
-      - postgres:postgres
+      - db:postgres
     volumes:
       - "../src/dags:/usr/local/airflow/dags"
       - "../src/jobs:/usr/local/airflow/jobs"
@@ -58,3 +68,6 @@ services:
 networks:
   local:
     driver: bridge
+
+volumes:
+  postgres-db-volume:
