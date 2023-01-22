@@ -30,7 +30,7 @@ services:
       context: ../
       dockerfile: DockerfileLocal
       args:
-        - SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@db/airflow
+        - SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
         - CORE__FERNET_KEY=bgcmnw69Rw6qqP42imvHumCa_FxizhErQr5Gf6HPErQ=
         - CORE__DAGS_FOLDER=/usr/local/airflow/dags
         - API__AUTH_BACKENDS=airflow.api.auth.backend.basic_auth

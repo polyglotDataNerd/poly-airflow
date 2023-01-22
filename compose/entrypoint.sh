@@ -15,7 +15,10 @@ while ! nc -z db 5432; do
   sleep 5
 done
 
-airflow db init && airflow db upgrade && airflow webserver && airflow scheduler
-sleep 30
-airflow users create -u airflow -p airflow -r Admin -f airflow -l airflow -e airflow@airflow.com
+airflow db init
+airflow db upgrade
 airflow users create -u admin -p admin -r Admin -f airflow -l airflow -e airflow@airflow.com
+sleep 5
+airflow scheduler &
+airflow webserver
+
