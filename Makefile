@@ -1,6 +1,5 @@
 airflow:
-	docker-compose --file compose/docker-compose.yml up -d db
-	docker-compose --file compose/docker-compose.yml up webs
+	docker-compose --file compose/docker-compose.yml up --build webs
 
 # Login to AWS registry (must have docker running)
 docker-login:
