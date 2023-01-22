@@ -1,4 +1,4 @@
-apache-airflow[google,amazon,apache.spark,package-extra,crypto,utils]==2.5.0
+apache-airflow[google,amazon,apache.spark,package-extra,crypto,utils]==2.5.1
 apache-airflow-providers-ssh
 boto3
 botocore
